@@ -910,6 +910,21 @@ void hmp_block_resize(Monitor *mon, const QDict *qdict)
     hmp_handle_error(mon, &err);
 }
 
+void hmp_block_rebase(Monitor *mon, const QDict *qdict)
+{
+    Error *err = NULL;
+    const char *drive = qdict_get_str(qdict, "drive");
+    const char *filename = qdict_get_str(qdict, "file");
+
+
+    //call qmp_block_rebase
+    qmp_block_rebase(drive, filename, &err);
+    if (!err)
+        monitor_printf(mon, "block_rebase %s %s\n", drive, filename);
+    hmp_handle_error(mon, &err);
+}
+
+
 void hmp_drive_mirror(Monitor *mon, const QDict *qdict)
 {
     const char *device = qdict_get_str(qdict, "device");

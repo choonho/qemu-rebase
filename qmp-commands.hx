@@ -978,6 +978,30 @@ Example:
 EQMP
 
     {
+        .name       = "block_rebase",
+        .args_type  = "device:s,file:s",
+        .mhandler.cmd_new = qmp_marshal_input_block_rebase,
+    },
+
+SQMP
+block_rebase
+------------
+
+Rebase a block image while a guest is running.
+
+Arguments:
+
+- "device": the device's ID, must be unique (json-string)
+- "file": new backing file path
+
+Example:
+
+-> { "execute": "block_rebase", "arguments": { "device": "ide0-hd0", "file": "/storage/new_base.img" } }
+<- { "return": {} }
+EQMP
+
+
+    {
         .name       = "block-stream",
         .args_type  = "device:B,base:s?,speed:o?,backing-file:s?,on-error:s?",
         .mhandler.cmd_new = qmp_marshal_input_block_stream,

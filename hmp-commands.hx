@@ -74,6 +74,22 @@ but should be used with extreme caution.  Note that this command only
 resizes image files, it can not resize block devices like LVM volumes.
 ETEXI
 
+
+    {
+        .name       = "block_rebase",
+        .args_type  = "drive:s,file:s",
+        .params     = "drive file",
+        .help       = "rebase drive's backing file",
+        .mhandler.cmd = hmp_block_rebase,
+    },
+
+STEXI
+@item block_rebase
+@findex block_rebase
+Rebase drive's backing file.
+ETEXI
+
+
     {
         .name       = "block_stream",
         .args_type  = "device:B,speed:o?,base:s?",

@@ -3480,3 +3480,12 @@
 # Since: 2.1
 ##
 { 'command': 'rtc-reset-reinjection' }
+
+##
+# @block_rebase
+#
+##
+{ 'command' : 'block_rebase',
+  'data'    : { 'device': 'str',
+                'file'  : 'str' } }
+

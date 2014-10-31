@@ -1849,6 +1849,50 @@ void qmp_block_resize(bool has_device, const char *device,
     }
 }
 
+void qmp_block_rebase(const char *device,
+                        const char *file,
+                        Error **errp)
+{
+    Error *local_err = NULL;
+    BlockDriverState *bs;
+    int ret;
+    char *backing_filename = g_malloc0(PATH_MAX);
+    
+    bs = bdrv_lookup_bs(device, NULL, &local_err);
+    if (local_err) {
+        error_propagate(errp, local_err);
+        return;
+    }
+    bdrv_get_backing_filename(bs, backing_filename, PATH_MAX);
+    if (!strcmp(backing_filename, file)) {
+        error_setg(errp, "block_rebase : same with original disk");
+        return;
+    }
+ 
+    /* change backing_file information in BlockDeviceState */
+    ret = bdrv_change_backing_file(bs, file, bs->backing_format);
+    if (ret < 0) {
+        error_setg(errp, "block_rebase : bdrv_change_backing_file");
+        goto fail;
+    }    
+    /* call rebase */
+    ret = bdrv_rebase_backing_file(bs, &local_err);
+    if (ret < 0) {
+        error_setg(errp, "block_rebase : bdrv_rebase_backing_file");
+        goto fail;
+    }
+    /* success */
+    g_free(backing_filename);
+    return;
+
+fail:
+    /* restore backing file information */
+    bdrv_change_backing_file(bs, backing_filename, bs->backing_format);
+    g_free(backing_filename);
+    return;
+} 
+
+
 static void block_job_cb(void *opaque, int ret)
 {
     BlockDriverState *bs = opaque;

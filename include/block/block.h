@@ -214,6 +214,7 @@ int bdrv_open_image(BlockDriverState **pbs, const char *filename,
                     bool allow_none, Error **errp);
 void bdrv_set_backing_hd(BlockDriverState *bs, BlockDriverState *backing_hd);
 int bdrv_open_backing_file(BlockDriverState *bs, QDict *options, Error **errp);
+int bdrv_rebase_backing_file(BlockDriverState *bs, Error **errp);
 int bdrv_append_temp_snapshot(BlockDriverState *bs, int flags, Error **errp);
 int bdrv_open(BlockDriverState **pbs, const char *filename,
               const char *reference, QDict *options, int flags,

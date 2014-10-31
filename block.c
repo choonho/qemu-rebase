@@ -896,7 +896,7 @@ static int bdrv_open_common(BlockDriverState *bs, BlockDriverState *file,
     Error *local_err = NULL;
 
     assert(drv != NULL);
-    assert(bs->file == NULL);
+    //assert(bs->file == NULL);
     assert(options != NULL && bs->options != options);
 
     if (file != NULL) {
@@ -1233,6 +1233,63 @@ int bdrv_open_backing_file(BlockDriverState *bs, QDict *options, Error **errp)
         goto free_exit;
     }
     bdrv_set_backing_hd(bs, backing_hd);
+
+free_exit:
+    g_free(backing_filename);
+    return ret;
+}
+
+
+/*
++ * Rebases the backing file on the fly
++ * Assume: backing filename is already changed
++ */
+int bdrv_rebase_backing_file(BlockDriverState *bs, Error **errp)
+{
+    char *backing_filename = g_malloc0(PATH_MAX);
+    int ret=0;
+    BlockDriverState *old_file = NULL;
+    BlockDriverState *old_backing_hd = NULL;
+    BlockDriver *back_drv = NULL;
+    Error *local_err = NULL;
+    
+    bs->open_flags &= ~BDRV_O_NO_BACKING;
+    bdrv_get_full_backing_filename(bs, backing_filename, PATH_MAX);
+   
+    old_file = bs->file;
+    old_backing_hd = g_malloc0(sizeof(BlockDriverState));
+    memcpy(old_backing_hd, bs->backing_hd, sizeof(BlockDriverState));
+
+    /*
+     * TODO: suspend block operation,
+     * since I modify backing file's property
+     */
+    if(bs->file) {
+        /*
+         * to open bdrv_open
+         * bs->file must be NULL
+         */
+        bs->file = NULL;
+    }
+ 
+    ret = bdrv_open(&bs->backing_hd, backing_filename, NULL, NULL, 
+        bdrv_backing_flags(bs->open_flags), back_drv, &local_err);
+
+    bs->file = old_file;
+    if (ret < 0) {
+        error_setg(errp, "Could not open backing file: %s",
+                   error_get_pretty(local_err));
+        error_free(local_err);
+        goto free_exit;
+    }
+
+    if (bs->backing_hd->file) {
+        pstrcpy(bs->backing_file, sizeof(bs->backing_file),
+                bs->backing_hd->file->filename);
+    }
+    bdrv_close(old_backing_hd);
+    /* Recalculate the BlockLimits with backing file */
+    bdrv_refresh_limits(bs, NULL);
 
 free_exit:
     g_free(backing_filename);
